@@ -16,8 +16,8 @@ def data_proccessing():
     print("[" + str(time.time() - start_time) + "] Loading US_Accidents_data.csv")
 
     try: 
-        df = pd.read_csv("US_Accidents_data.csv", index_col="Unnamed: 0")
-        # df = pd.read_csv("OldDroptest.csv", index_col="Unnamed: 0")
+        df = pd.read_csv("US_Accidents_data.csv")
+        # df = pd.read_csv("US_Accidents_data.csv", index_col="Unnamed: 0")
     except FileNotFoundError:
         print("File: US_Accidents_data.csv not found")
         exit()
@@ -27,7 +27,10 @@ def data_proccessing():
     df = df.dropna(subset = ["ID", "Severity", "Zipcode", "Start_Time", "End_Time", "Visibility(mi)", "Weather_Condition", "Country"], thresh=8)
 
     # Eliminate all rows with empty values in 3 or more columns
-    df = df.dropna(thresh=19)
+    df = df.dropna(thresh=20)
+
+    # If using the unnamed column in the CSV as index, thresh = 19
+    # df = df.dropna(thresh=19)
 
     # Eliminate all rows with distance equal to zero
     df = df[df["Distance(mi)"] != 0]
@@ -40,8 +43,8 @@ def data_proccessing():
     df['End_Time'] = pd.to_datetime(df['End_Time'])
 
     # All accicent that lasted no time 
-    # (The diference between End_time and Start_time is zero)
     # If accicent Start_Time and End_Time are the same that equates to a diff of 0
+    # Only kepp rows with different Start_Times and End_Times
     df = df[df["Start_Time"] != df["End_Time"]]
 
     print("[" + str(time.time() - start_time) + "] Printing row count after data clean is finished")
@@ -52,8 +55,8 @@ def data_proccessing():
 
 
 # 1. In what month were there more accidents reported?
-def da_month_with_most_accidents():
-    global df, start_time, results
+def worst_month():
+    global df, start_time
     month_list = ["January", "Feb", "March", "April", "May", "June", "July", 
         "August", "September", "October", "November", "December"]
     top_month = pd.DatetimeIndex(df['Start_Time']).month.value_counts()[:1]
@@ -69,9 +72,10 @@ def da_month_with_most_accidents():
         + " there were more accidents reported with a total of: " 
         + str(num_accidents[0]) + "\n")
 
+
 # 2. What is the state that had the most accidents in 2020?
-def states_with_most_accidents_in_2022():
-    global df, start_time, results
+def worst_state_2020():
+    global df, start_time
     # Get rows from 2020 only
     year2020 = df["Start_Time"].dt.year == int(2020)
     specifed_year = df[year2020]
@@ -93,8 +97,7 @@ def states_with_most_accidents_in_2022():
 
 # 3. What is the state that had the most accidents of severity 2 in 2021?
 def most_accidents_of_severity_2_state():
-    global df, start_time, results
-
+    global df, start_time
     # Get rows with specified year
     year2021 = df["Start_Time"].dt.year == int(2021)
     specifed_year = df[year2021]
@@ -116,9 +119,7 @@ def most_accidents_of_severity_2_state():
     print("[" + str(time.time() - start_time) + "] " 
         + state[0] + " had the most accidents of severity 2 in 2021 with a total of: "
         + str(num_accidents[0]) + "\n")
-
-    # print(specifed_year.head(15))
-    # print(index.to_list())
+        
 
 # 4. What severity is the most common in Virginia?
 def virginia_top_severity():
@@ -143,7 +144,7 @@ def virginia_top_severity():
 
 # 5. What are the 5 cities that had the most accidents in 2019 in California?
 def top_cities():
-    global df, start_time, results
+    global df, start_time
 
     # Only get rows that correspond to 2019
     year2019 = df["Start_Time"].dt.year == int(2019)
@@ -163,9 +164,8 @@ def top_cities():
 
 
 # 6. What was the average humidity and average temperature of all accidents of severity 4 that occurred in 2021?
-
 def avgerage_humidity_temp():
-    global df, start_time, results
+    global df, start_time
 
     # Only get rows that correspond to 2021
     year2021 = df["Start_Time"].dt.year == int(2021)
@@ -175,35 +175,46 @@ def avgerage_humidity_temp():
     severity_4 = specifed_year["Severity"] == int(4)
     specifed_severity = specifed_year[severity_4]
 
-    # 
+    # Caulcaute the average temp and humidity from the remaining rows
     avg_temp = specifed_severity["Temperature(F)"].mean()
     avg_hummid = specifed_severity["Humidity(%)"].mean()
 
-    print("[" + str(time.time() - start_time) + "] " 
-        + "6. What was the average humidity and average temperature of all accidents of severity 4 that occurred in 2021?") 
-    print("[" + str(time.time() - start_time) + "] " 
-        + "Average temperature: " + str(avg_temp) + " Average humidity: " 
-        + str(avg_hummid) + "\n")
+    # If temp avg is nan there was not enough information to calculate avg
+    if (pd.isna(avg_temp) == True):
+        print("[" + str(time.time() - start_time) + "] " 
+            + "No tempature recordings for this year and or severity")
+    
+    # If humidity avg is nan there was not enough information to calculate avg
+    if (pd.isna(avg_hummid) == True):
+        print("[" + str(time.time() - start_time) + "] " 
+            + "No humidity recordings for this year and or severity")
+
+    # If both are values, print the results
+    if ((pd.isna(avg_temp) == False) and (pd.isna(avg_hummid) == False)):
+        print("[" + str(time.time() - start_time) + "] " 
+            + "6. What was the average humidity and average temperature of all accidents of severity 4 that occurred in 2021?") 
+        print("[" + str(time.time() - start_time) + "] " 
+            + "Average temperature: " + str(avg_temp) + " Average humidity: " 
+            + str(avg_hummid) + "\n")
 
 
 # 7. What are the 3 most common weather conditions (weather_conditions) when accidents occurred?
-
 def common_conditions():
-    global df, start_time, results
+    global df, start_time
 
+    # Grab the top 3 weather conditions 
     top_conditions = df["Weather_Condition"].value_counts()[:3]
 
     print("[" + str(time.time() - start_time) + "] " 
         + "7. What are the 3 most common weather conditions (weather_conditions) when accidents occurred?") 
     print("[" + str(time.time() - start_time) + "] " 
-        + "The 3 most common are the following:\n" 
+        + "These were the 3 most common along with the corresponding number of accidents:\n" 
         + top_conditions.to_string() + "\n")
 
 
 # 8. What was the maximum visibility of all accidents of severity 2 that occurred in the state of New Hampshire?
-
 def max_visibility():
-    global df, start_time, results
+    global df, start_time
 
     # Only get rows that correspond to New Hampshire
     new_hampshire = df["State"] == "NH"
@@ -219,14 +230,14 @@ def max_visibility():
     print("[" + str(time.time() - start_time) + "] " 
         + "8. What was the maximum visibility of all accidents of severity 2 that occurred in the state of New Hampshire?") 
     print("[" + str(time.time() - start_time) + "] " 
-        + str(max_vis) + "\n")
+        + str(max_vis) + " miles\n")
 
 
 
 # 9. How many accidents of each severity were recorded in Bakersfield?
 
 def bakersfield_severity_count():
-    global df, start_time, results
+    global df, start_time
 
     # Only get rows that belong to Bako
     bakersfield = df["City"] == "Bakersfield"
@@ -248,7 +259,7 @@ def bakersfield_severity_count():
 # 10. What was the longest accident (in hours) recorded in Florida in the Spring (March, April, and May) of 2022?
 
 def longest_accident():
-    global df, start_time, results
+    global df, start_time
     
     # Only get rows that correspond to 2022
     year2022 = df["Start_Time"].dt.year == int(2022)
@@ -293,7 +304,7 @@ def longest_accident():
 #     + str((time.time() - start_time) / 60) + "\n")
 
 def main_menu():
-    global start_time, read_data, results
+    global start_time, read_data
 
     print("\nCMPS 3500 Project: \nPlease select an option\n")
 
@@ -320,8 +331,8 @@ def main_menu():
         # Start timer
         start_time = time.time()
 
-        da_month_with_most_accidents()
-        states_with_most_accidents_in_2022()
+        worst_month()
+        worst_state_2020()
         most_accidents_of_severity_2_state()
         virginia_top_severity()
         top_cities()
@@ -333,8 +344,8 @@ def main_menu():
 
         # Threading for questions
 
-        # t1 = threading.Thread(target= da_month_with_most_accidents)
-        # t2 = threading.Thread(target= states_with_most_accidents_in_2022)
+        # t1 = threading.Thread(target= worst_month)
+        # t2 = threading.Thread(target= worst_state_2020)
         # t3 = threading.Thread(target= most_accidents_of_severity_2_state)
         # t4 = threading.Thread(target= virginia_top_severity)
         # t5 = threading.Thread(target= top_cities)
