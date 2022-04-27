@@ -1,33 +1,51 @@
-import pandas as pd 
+import sys
 import time
 import threading
+import re
+
+# Check for and quit if environment is python2.
+if (sys.version_info[0] == 2):
+    print("\nCannot run script with python 2.x")
+    print ("Usage: python3 %s \n" % sys.argv[0])
+    quit()
+
+# import pandas if environment is python 3
+import pandas as pd 
 
 read_data = False
 
-def data_proccessing():
-    global df, read_data
+def load_data(filename = "US_Accidents_data.csv"):
+    global df, read_data, start_time
     # Data-cleaning 
     ##############################################################################
 
     print("Loading and cleaning input data set:")
     print("************************************")
-    print("[" + str(time.time() - start_time) + "] Starting Script")
-
-    print("[" + str(time.time() - start_time) + "] Loading US_Accidents_data.csv")
+    print(f"[{time.time() - start_time}] Starting Script")
+    print(f"[{time.time() - start_time}] Loading {filename}")
 
     try: 
-        df = pd.read_csv("US_Accidents_data.csv")
+        df = pd.read_csv(filename)
         # df = pd.read_csv("US_Accidents_data.csv", index_col="Unnamed: 0")
     except FileNotFoundError:
         print("File: US_Accidents_data.csv not found")
         exit()
 
-    print("[" + str(time.time() - start_time) + "] Performing Data Clean Up")
+    print(f"[{time.time() - start_time}] Total Columns Read: {len(df.columns)}")
+    print(f"[{time.time() - start_time}] Total Rows Read: {len(df)}")
+
+    read_data = True
+
+def process_data():
+    global df, start_time
+    print("Processing input data set:")
+    print("**************************")
+    print(f"[{time.time() - start_time}] Performing Data Clean Up")
 
     df = df.dropna(subset = ["ID", "Severity", "Zipcode", "Start_Time", "End_Time", "Visibility(mi)", "Weather_Condition", "Country"], thresh=8)
 
     # Eliminate all rows with empty values in 3 or more columns
-    df = df.dropna(thresh=20)
+    df = df.dropna(thresh = len(df.columns) - 2)
 
     # If using the unnamed column in the CSV as index, thresh = 19
     # df = df.dropna(thresh=19)
@@ -47,11 +65,9 @@ def data_proccessing():
     # Only kepp rows with different Start_Times and End_Times
     df = df[df["Start_Time"] != df["End_Time"]]
 
-    print("[" + str(time.time() - start_time) + "] Printing row count after data clean is finished")
-    print("[" + str(time.time() - start_time) + "] " + str(len(df)))
-    read_data = True
+    print(f"[{time.time() - start_time}] Total Rows Read after cleaning is: {len(df)}")
 
-    ##############################################################################
+##############################################################################
 
 
 # 1. In what month were there more accidents reported?
@@ -64,13 +80,8 @@ def worst_month():
     month = top_month.index.tolist()
     month_index = month[0] - 1
 
-    print("\n[" + str(time.time() - start_time) + "] " 
-    + "1. In what month were there more accidents reported?")
-
-    print("[" + str(time.time() - start_time) + "] " + "In " 
-        + month_list[month_index] 
-        + " there were more accidents reported with a total of: " 
-        + str(num_accidents[0]) + "\n")
+    print(f"[{time.time() - start_time}] 1. In what month were there more accidents reported?")
+    print(f"[{time.time() - start_time}] {month_list[month_index]} had the most with {num_accidents[0]}.\n")
 
 
 # 2. What is the state that had the most accidents in 2020?
@@ -87,12 +98,8 @@ def worst_state_2020():
     # The index of the dataframe top_state is the state name
     state = top_state.index.tolist()
 
-    print("[" + str(time.time() - start_time) + "] " 
-        + "2. What is the state that had the most accidents in 2020?") 
-
-    print("[" + str(time.time() - start_time) + "] " 
-        + state[0] + " had the most accidents in 2020 with a total of :" 
-        + str(num_accidents[0]) + "\n")
+    print(f"[{time.time() - start_time}] 2. What is the state that had the most accidents in 2020?")
+    print(f"[{time.time() - start_time}] {state[0]} had the most with {num_accidents[0]} accidents.\n")
 
 
 # 3. What is the state that had the most accidents of severity 2 in 2021?
@@ -113,12 +120,8 @@ def most_accidents_of_severity_2_state():
     # The index of the dataframe top_state is the state name
     state = top_state.index.tolist()
 
-    print("[" + str(time.time() - start_time) + "] " 
-        + "3. What is the state that had the most accidents of severity 2 in 2021?") 
-        
-    print("[" + str(time.time() - start_time) + "] " 
-        + state[0] + " had the most accidents of severity 2 in 2021 with a total of: "
-        + str(num_accidents[0]) + "\n")
+    print(f"[{time.time() - start_time}] 3. What is the state that had the most accidents of severity 2 in 2021?")
+    print(f"[{time.time() - start_time}] {state[0]} had the most with {num_accidents} accidents.\n")
         
 
 # 4. What severity is the most common in Virginia?
@@ -135,11 +138,8 @@ def virginia_top_severity():
     # The index of the dataframe top_state is the state name
     serverity = top_serverity.index.tolist()
 
-    print("[" + str(time.time() - start_time) + "] " 
-        + "4. What severity is the most common in Virginia?") 
-    print("[" + str(time.time() - start_time) + "] " 
-        + "Severity: " + str(serverity[0]) + " was most common in Virginia with a total of: " 
-        + str(num_accidents[0]) + " accidents\n")
+    print(f"[{time.time() - start_time}] 4. What severity is the most common in Virginia?")
+    print(f"[{time.time() - start_time}] Severity {serverity[0]} was most common with {num_accidents[0]} accidents.\n")
     
 
 # 5. What are the 5 cities that had the most accidents in 2019 in California?
@@ -155,12 +155,10 @@ def top_cities():
     specified_state = specifed_year[california]
 
     top_cities = specified_state["City"].value_counts()[:5]
-
-    print("[" + str(time.time() - start_time) + "] " 
-        + "5. What are the 5 cities that had the most accidents in 2019 in California?") 
-    print("[" + str(time.time() - start_time) + "] " 
-        + "The following are the 5 cities with the most accidents in 2019 in CA\n" 
-        + top_cities.to_string() + "\n")
+    
+    print(f"[{time.time() - start_time}] 5. What are the 5 cities that had the most accidents in 2019 in California?")
+    print(f"[{time.time() - start_time}] The following are the 5 cities with the most accidents in 2019 in CA"
+        + f"\n{top_cities.to_string()}\n")
 
 
 # 6. What was the average humidity and average temperature of all accidents of severity 4 that occurred in 2021?
@@ -179,23 +177,19 @@ def avgerage_humidity_temp():
     avg_temp = specifed_severity["Temperature(F)"].mean()
     avg_hummid = specifed_severity["Humidity(%)"].mean()
 
+    print(f"[{time.time() - start_time}] " 
+        + "6. What was the average humidity and average temperature of all accidents of severity 4 that occurred in 2021?")
     # If temp avg is nan there was not enough information to calculate avg
     if (pd.isna(avg_temp) == True):
-        print("[" + str(time.time() - start_time) + "] " 
-            + "No tempature recordings for this year and or severity")
+        print(f"[{time.time() - start_time}] No tempature recordings for this year and or severity")
     
     # If humidity avg is nan there was not enough information to calculate avg
     if (pd.isna(avg_hummid) == True):
-        print("[" + str(time.time() - start_time) + "] " 
-            + "No humidity recordings for this year and or severity")
+        print(f"[{time.time() - start_time}] No humidity recordings for this year and or severity")
 
     # If both are values, print the results
     if ((pd.isna(avg_temp) == False) and (pd.isna(avg_hummid) == False)):
-        print("[" + str(time.time() - start_time) + "] " 
-            + "6. What was the average humidity and average temperature of all accidents of severity 4 that occurred in 2021?") 
-        print("[" + str(time.time() - start_time) + "] " 
-            + "Average temperature: " + str(avg_temp) + " Average humidity: " 
-            + str(avg_hummid) + "\n")
+        print(f"[{time.time() - start_time}] Average Temp: {avg_temp} Average Humidity {avg_hummid}.\n")
 
 
 # 7. What are the 3 most common weather conditions (weather_conditions) when accidents occurred?
@@ -205,11 +199,11 @@ def common_conditions():
     # Grab the top 3 weather conditions 
     top_conditions = df["Weather_Condition"].value_counts()[:3]
 
-    print("[" + str(time.time() - start_time) + "] " 
+    print(f"[{time.time() - start_time}] " 
         + "7. What are the 3 most common weather conditions (weather_conditions) when accidents occurred?") 
-    print("[" + str(time.time() - start_time) + "] " 
+    print(f"[{time.time() - start_time}]" 
         + "These were the 3 most common along with the corresponding number of accidents:\n" 
-        + top_conditions.to_string() + "\n")
+        + f"{top_conditions.to_string()}\n")
 
 
 # 8. What was the maximum visibility of all accidents of severity 2 that occurred in the state of New Hampshire?
@@ -227,10 +221,9 @@ def max_visibility():
     # Get the max Visibility from the new constructed df
     max_vis = severity_2["Visibility(mi)"].max()
 
-    print("[" + str(time.time() - start_time) + "] " 
+    print(f"[{time.time() - start_time}] " 
         + "8. What was the maximum visibility of all accidents of severity 2 that occurred in the state of New Hampshire?") 
-    print("[" + str(time.time() - start_time) + "] " 
-        + str(max_vis) + " miles\n")
+    print(f"[{time.time() - start_time}] {max_vis} miles\n")
 
 
 
@@ -248,12 +241,12 @@ def bakersfield_severity_count():
     severity_count = city["Severity"].value_counts().tolist()
 
 
-    print("[" + str(time.time() - start_time) + "] " + 
-        "9. How many accidents of each severity were recorded in Bakersfield?")
+    print(f"[{time.time() - start_time}] "
+        + "9. How many accidents of each severity were recorded in Bakersfield?")
     for i in range (len(severity)):
-        print("[" + str(time.time() - start_time) + "] " 
-            + str(severity_count[i]) + " accidents recorded " 
-            + "with severity " + str(severity[i]))
+        print(f"[{time.time() - start_time}] "
+            + f"{severity_count[i]} accidents recorded " 
+            + f"with severity {severity[i]}")
 
 
 # 10. What was the longest accident (in hours) recorded in Florida in the Spring (March, April, and May) of 2022?
@@ -262,7 +255,7 @@ def longest_accident():
     global df, start_time
     
     # Only get rows that correspond to 2022
-    year2022 = df["Start_Time"].dt.year == int(2022)
+    year2022 = df["Start_Time"].dt.year == int(2020)
     specifed_year = df[year2022]
 
     # Only get rows that correspond to Florida
@@ -273,7 +266,7 @@ def longest_accident():
     specified_months = state.loc[
         (state['Start_Time'].dt.month == int(3)) | 
         (state['Start_Time'].dt.month == int(4)) | 
-        (state['Start_Time'].dt.month == int(5))]
+        (state['Start_Time'].dt.month == int(5)) ]
 
     # Find the longest accident
     # The longest accident will have the greatest differnce between Start_Time
@@ -294,7 +287,7 @@ def longest_accident():
             + "There are no recorded accidents in the year 2022\n")
 
     else:
-        print("[" + str(time.time() - start_time) + "] " 
+        print("\n[" + str(time.time() - start_time) + "] " 
             + "10. What was the longest accident (in hours) recorded in Florida in the Spring (March, April, and May) of 2022?") 
         print("[" + str(time.time() - start_time) + "] " 
             + str(longest_acc) + " hours\n")
@@ -303,98 +296,112 @@ def longest_accident():
 # print("Total Running Time (In Minutes): " 
 #     + str((time.time() - start_time) / 60) + "\n")
 
+# This searches accidents by city, state. and zipcode
+def search_location(input_city, input_state, input_zipcode):
+    global df
+
+    print("called")
+    if(input_city):
+        # Ensures that the city the users entered only contains letters and spaces
+        city = re.sub(r'[^a-zA-Z\s]', "", input_city)
+        city = city.lower()
+        city = city.strip()
+        city = city.title()
+
+        city_df = df[df["City"] == city]
+        if(city_df.empty):
+            print(f"'{city}' is not a city listed in the file")
+            return
+    else:
+        pass
+
+##############################################################################
+
 def main_menu():
     global start_time, read_data
 
-    print("\nCMPS 3500 Project: \nPlease select an option\n")
+    quit = False
 
-    # Menu options
-    print("Press '1' to read in US_Accidents_data.csv into dataframe\n")
-    print("Press '2' to answer all 10 questions\n")
-    print("Press '3' to quit\n")
-    # user input
-    user_input = input("Select an option '1' or '2' or '3': ")
+    while(not quit):
 
-    # If utilizing threading store print results in list to print them out in order later
-    # results = []
-    # for i in range (10):
-    #     results.append([])
+        print("\nCMPS 3500 Project: \nPlease select an option\n")
 
-    if user_input == "1":
-        read_data = True
-        start_time = time.time()
-        data_proccessing()
-        main_menu()
-    
-    elif user_input == "2" and read_data == True:
-        print("\nAnswering Questions\n*******************")
-        # Start timer
-        start_time = time.time()
+        # Menu options
+        print("(1) Load data")
+        print("(2) Process data")
+        print("(3) Print Answers")
+        print("(4) Search Accidents (Use City, State, and Zip Code)")
+        print("(5) Search Accidents (Year, Month and Day)")
+        print("(6) Search Accidents (Temperature Range and Visibility Range)")
+        print("(7) Quit\n")
 
-        worst_month()
-        worst_state_2020()
-        most_accidents_of_severity_2_state()
-        virginia_top_severity()
-        top_cities()
-        avgerage_humidity_temp()
-        common_conditions()
-        max_visibility()
-        bakersfield_severity_count()
-        longest_accident()
+        # user input
+        user_input = input("Select an option: ")
 
-        # Threading for questions
+        if user_input == "1":
+            read_data = True
+            start_time = time.time()
+            load_data()
+            load_time = time.time() - start_time
+            print(f"TIme to load is: [{load_time}]\n")
+            
 
-        # t1 = threading.Thread(target= worst_month)
-        # t2 = threading.Thread(target= worst_state_2020)
-        # t3 = threading.Thread(target= most_accidents_of_severity_2_state)
-        # t4 = threading.Thread(target= virginia_top_severity)
-        # t5 = threading.Thread(target= top_cities)
-        # t6 = threading.Thread(target= avgerage_humidity_temp)
-        # t7 = threading.Thread(target= common_conditions)
-        # t8 = threading.Thread(target= max_visibility)
-        # t9 = threading.Thread(target= bakersfield_severity_count)
-        # t10 = threading.Thread(target=longest_accident)
+        elif user_input == "2" and read_data == True:
+            start_time = time.time()
+            process_data()
+            process_time = time.time() - start_time
+            print(f"Time to process is: {process_time}\n")
+            print(f"Total Runtime: {load_time + process_time}")
+        
+        elif user_input == "3" and read_data == True:
+            print("\nAnswering Questions")
+            print("*******************\n")
 
-        # t1.start()
-        # t2.start()
-        # t3.start()
-        # t4.start()
-        # t5.start()
-        # t6.start()
-        # t7.start()
-        # t8.start()
-        # t9.start()
-        # t10.start()
+            # Start timer
+            start_time = time.time()
 
-        # t1.join()
-        # t2.join()
-        # t3.join()
-        # t4.join()
-        # t5.join()
-        # t6.join()
-        # t7.join()
-        # t8.join()
-        # t9.join()
-        # t1.join()
+            worst_month()
+            worst_state_2020()
+            most_accidents_of_severity_2_state()
+            virginia_top_severity()
+            top_cities()
+            avgerage_humidity_temp()
+            common_conditions()
+            max_visibility()
+            bakersfield_severity_count()
+            longest_accident()
 
-        # for i in range (10):
-        #     print(results[i])
+            question_time = time.time() - start_time
+            print(f"Time to answer: {question_time}")
+            print(f"Total runtime: {load_time + process_time + question_time}")
 
-        print("Total Running Time: "  + str(time.time() - start_time) + "\n")
-        main_menu()
+        elif user_input == "4" and read_data == True:
+            # User enters city name
+            input1 = input("Enter a city: ")
 
-    elif user_input == "3":
-        exit()
-    
-    # If user just presses enter w/o entering anything
-    elif user_input == "":
-        print("You did not pick an option\n")
-        main_menu()
+            is_state = False
+            while(not is_state):
+                input2 = input("Enter a state (abbreviated): ")
+                state = re.sub(r'[^a-zA-Z]', "", input2)
+                state = state.upper()
+                if(len(state) == 2 or len(state) == 0):
+                    is_state = True
+            
+            is_zip = False
+            while(not is_zip):
+                input3 = input("Enter a (5) digit Zipcode: ")
+                zipcode = re.sub(r'[^0-9]', "", input3)
+                if(len(zipcode) == 5 and zipcode.isnumeric() or len(zipcode) == 0):
+                    is_zip = True
 
-    else:
-        print("\nINVALID: Pick a specified option or read in data first (option: '1')\n")
-        main_menu()
+            # search_location(input1, state, zipcode)
+        
+        # If user just presses enter w/o entering anything
+        elif user_input == "9":
+            quit = True
 
+        else:
+            print("\nINVALID: Pick a specified option or read in data first (option: '1')\n")
 
 main_menu()
 
