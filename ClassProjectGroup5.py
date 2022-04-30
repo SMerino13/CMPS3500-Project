@@ -28,8 +28,8 @@ def load_data(filename = "US_Accidents_data.csv"):
         df = pd.read_csv(filename)
         # df = pd.read_csv("US_Accidents_data.csv", index_col="Unnamed: 0")
     except FileNotFoundError:
-        print("File: US_Accidents_data.csv not found")
-        exit()
+        print(f"File: {filename} not found")
+        return
 
     print(f"[{time.time() - start_time}] Total Columns Read: {len(df.columns)}")
     print(f"[{time.time() - start_time}] Total Rows Read: {len(df)}")
@@ -249,7 +249,7 @@ def bakersfield_severity_count():
             + f"with severity {severity[i]}")
 
 
-# 10. What was the longest accident (in hours) recorded in Florida in the Spring (March, April, and May) of 2022?
+# 10. What was the longest accident (in hours) recorded in Florida in the Spring (March, April, and May) of 2020?
 
 def longest_accident():
     global df, start_time
@@ -284,7 +284,7 @@ def longest_accident():
         print("\n[" + str(time.time() - start_time) + "] " 
             + "10. What was the longest accident (in hours) recorded in Florida in the Spring (March, April, and May) of 2022?")
         print("[" + str(time.time() - start_time) + "] " 
-            + "There are no recorded accidents in the year 2022\n")
+            + "There are no recorded accidents in the year 2020\n")
 
     else:
         print("\n[" + str(time.time() - start_time) + "] " 
@@ -391,13 +391,15 @@ def main_menu():
             while(not is_zip):
                 input3 = input("Enter a (5) digit Zipcode: ")
                 zipcode = re.sub(r'[^0-9]', "", input3)
-                if(len(zipcode) == 5 and zipcode.isnumeric() or len(zipcode) == 0):
+                if(len(zipcode) == 5 and zipcode.isnumeric()):
+                    is_zip = True
+                if(len(zipcode) == 0):
                     is_zip = True
 
             # search_location(input1, state, zipcode)
         
         # If user just presses enter w/o entering anything
-        elif user_input == "9":
+        elif user_input == "7":
             quit = True
 
         else:
