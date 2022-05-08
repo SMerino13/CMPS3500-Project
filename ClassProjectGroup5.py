@@ -36,7 +36,10 @@ def load_data(filename = "US_Accidents_data.csv"):
         df = pd.read_csv(filename)
     except FileNotFoundError:
         # If file not found, return to menu
-        print("UNABLE TO LOAD FILE!:",filename,"not found")
+        print("UNABLE TO LOAD FILE!:",filename,"not found in directory")
+        return False
+    except:
+        print("UNABLE TO LOAD FILE!:",filename)
         return False
 
     print("[",time.time() - start_time,"] Total Columns Read:",len(df.columns))
