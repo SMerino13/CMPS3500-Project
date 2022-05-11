@@ -27,7 +27,7 @@ read_data = False
 def load_data(filename = "US_Accidents_data.csv"):
     global df, read_data, start_time
 
-    print("Loading and cleaning input data set:")
+    print("Loading data set:")
     print("************************************")
     print("[",time.time() - start_time,"] Starting Script")
     print("[",time.time() - start_time,"] Loading",filename)
@@ -327,106 +327,152 @@ def longest_accident():
 #     + str((time.time() - start_time) / 60) + "\n")
 
 # This searches accidents by city, state. and zipcode
-def search_location(city, state, zipcode):
+def search_location():
     global df
+    is_state = False
+    is_zip = False
+    local_frame = df.copy()
 
-    location = df.copy()
-    str_location = ""
+    # Get user input for State, City, Zip
+    # ________________________________________________________________________
+    while(not is_state):
+        # User enters state name
+        input2 = input("Enter a state (abbreviated): ")
+
+            # Ensures that the state they entered is only 2 letters
+        state = re.sub(r'[^a-zA-Z]', "", input2)
+        state = state.upper()
+        if(len(state) == 2 or len(state) == 0):
+            is_state = True
+
+    # User enters city name
+    input1 = input("Enter a city: ")
+
+    # Ensures that the city the users entered only contains letters and spaces
+    city = re.sub(r'[^a-zA-Z\s]', "", input1)
+    city = city.lower()
+    city = city.strip()
+    city = city.title()
+    
+    while(not is_zip):
+        # User enters state name
+        input3 = input("Enter a (5) digit Zipcode [Letters will be ignored]: ")
+
+        # Ensures that the zip entered is 5 numbers
+        zipcode = re.sub(r'[^0-9]', "", input3)
+        if(len(zipcode) == 5 and zipcode.isnumeric() or len(zipcode) == 0):
+            is_zip = True
+    # ________________________________________________________________________
+
+    # Begin Filtering Data Based on Input
+    # ________________________________________________________________________
+    # Start Timer
+    start_time = time.time()
 
     # If a City was entered, make a boolean array where True values are rows that contain that City
     if(city):
-        city_mask = location["City"] == city
+        city_mask = local_frame["City"] == city
         # IF there are no true values, that City does not exist in the Dataframe
         if(sum(city_mask) == 0):
             print(city,"is not a city listed in the file")
             return
         else:
-            location = location[city_mask]
-            str_location += " " + city
+            local_frame = local_frame[city_mask]
 
     # If a State was entered, make a boolean array where True values are rows that contain that State
     if(state):
-        state_mask = location["State"] == state
+        state_mask = local_frame["State"] == state
         # IF there are no true values, that state does not exist in the Dataframe
         if(sum(state_mask) == 0):
             print(state,"is not a state listed in the file")
             return
         else:
-            location = location[state_mask]
-            str_location += " " + state
+            local_frame = local_frame[state_mask]
 
     # If a Zipcode was entered, make a boolean array where True values are rows that contain that Zipcode
     if(zipcode):
-        zip_mask = location["Zipcode"] == zipcode
+        zip_mask = local_frame["Zipcode"] == zipcode
         # IF there are no true values, that Zipcode does not exist in the Dataframe
         if(sum(zip_mask) == 0):
             print(zipcode,"is not a zipcode listed in the file")
             return
         else:
-            location = location[zip_mask]
-            str_location += " " + str(zipcode)
+            local_frame = local_frame[zip_mask]
 
-    print("[",time.time() - start_time,"] There are:", len(location),
-        "accidents recorded in" + str_location + "\n")
+    print("There were",len(local_frame),"accidents.")
+    print("Time to perform search is:[",time.time() - start_time,"]\n")
 
-    # location = df.loc[
-    #     ((df["City"] == city) 
-    #     & (df["State"] == state)  
-    #     & (df["Zipcode"] == zipcode))]
 
-def search_date(year, month, day):
-    global df
+def search_date():
+    is_month = False
+    is_year = False
+    is_day = False
+    user_input = False
 
-    date = df.copy()
-    str_date = ""
-
-    # If a year was entered, make a boolean array where True values are rows that contain that year
-    if(year): 
-        #^[0-9]{4}
-        #print(pd.DatetimeIndex(date['Start_Time']).year == year)
-        date['Year'] = pd.DatetimeIndex(date['Start_Time']).year == year
-        print(date['Year'])
-        #year_mask = date['Start_Time'].dt.year == year
-        #print(date['Start_Time'].dt)
-        #print(date['Start_Time'].dt.year == year)
-
-        # IF there are no true values, that year does not exist in the Dataframe
-        #print(year_mask)
-        if(sum(year_mask) == 0):
-            print(year, "is not a year listed in the file")
-            return
-        else: 
-            date = date[year_mask]
-            str_date += " " + str(year)
-
+    local_frame = df.copy()
     
-    # If a month was entered, make a boolean array where True values are rows that contain that month
-    if(month):
-        #month_mask = pd.DatetimeIndex(date['Start_Time']).month == month
-        #month_mask = pd.DatetimeIndex(date['Start_Time']).month == month
-        # IF there are no true values, that month does not exist in the Dataframe
-        if(sum(month_mask) == 0):
-            print(month, "is not a month listed in the file")
-            return
-        else: 
-            date = date[month_mask]
-            str_date += " " + str(month)
-
-    # If a day was entered, make a boolean array where True values are rows that contain that day
-    if(day):
-        day_mask = pd.DatetimeIndex(date['Start_Time']).day == day
-        # IF there are no true values, that day does not exist in the Dataframe
-        if(sum(day_mask) == 0):
-            print(day, "is not a day listed in the file")
-            return
-        else: 
-            date = date[day_mask]
-            str_date += " " + str(day)
-
-    print("[",time.time() - start_time,"] There are:", len(date),
-    "accidents recorded in" + str_date + "\n")
+    # Get user input for Month, Year, and Day
+    # ________________________________________________________________________
+    while (not is_year):
+        year = input("\nEnter a [Year] using digits: ")
         
+        if(year.isnumeric() and len(year) == 4):
+            user_input = True
+            is_year = True
+        elif(len(year) == 0):
+            is_year = True
+        else:
+           print("Invalid Input...\n")
+    
+    while (not is_month):
+        month = input("Enter a [Month] using digits: ")
+        
+        if(month.isnumeric() and (int(month) > 0 and int(month) < 13)):
+            user_input = True
+            is_month = True
+        elif(len(month) == 0):
+            is_month = True
+        else:
+            print("Invalid Input...\n")
 
+    while(not is_day):
+        day = input("Enter a [Day] using digits: ")
+        
+        if(day.isnumeric() and (int(day) > 0 and int(day) < 32)):
+            user_input = True
+            is_day = True
+        elif(len(day) == 0):
+            is_day = True
+        else:
+            print("Invalid Input...\n")
+    # ________________________________________________________________________
+    # Filter dataframe using the inputted data
+    # ________________________________________________________________________
+    # Start Timer
+    start_time = time.time()
+
+    if(year):
+        filter_year = local_frame["Start_Time"].dt.year == int(year)
+        local_frame = local_frame[filter_year]
+
+    if(month):
+        filter_month = local_frame["Start_Time"].dt.month == int(month)
+        local_frame = local_frame[filter_month]
+    
+    if(day):
+        filter_day = local_frame["Start_Time"].dt.day == int(day)
+        local_frame = local_frame[filter_day]
+    # ________________________________________________________________________
+    # Print Results
+    # ________________________________________________________________________ 
+    
+    if(user_input):
+        print("[",time.time() - start_time,"] There are:",len(local_frame),
+            "accidents.\n")
+    else:
+        print("No Year, Month, or Day was inputed. Total Accidents",
+            len(local_frame))
+        
 ##############################################################################
 
 def main_menu():
@@ -452,7 +498,8 @@ def main_menu():
 
         if user_input == "1":
             # ASK FOR A FILENAME OR USE DEFAULT
-            filename = input("Enter name of file (do not append '.csv') or press enter for US_Accidents_data.csv: ")
+            print("Enter the name or path of the file or press enter to read in US_Accidents_data")
+            filename = input("[Do not append "'".csv"'"]: ")
 
             if(filename):
                 filename = filename + ".csv"
@@ -502,44 +549,11 @@ def main_menu():
             print("Total runtime: [",load_time + process_time + question_time,"]\n")
 
         elif user_input == "4" and read_data == True:
-            # User enters city name
-            input1 = input("Enter a city: ")
-
-            # Ensures that the city the users entered only contains letters and spaces
-            city = re.sub(r'[^a-zA-Z\s]', "", input1)
-            city = city.lower()
-            city = city.strip()
-            city = city.title()
-
-            is_state = False
-            while(not is_state):
-                # User enters state name
-                input2 = input("Enter a state (abbreviated): ")
-
-                 # Ensures that the state they entered is only 2 letters
-                state = re.sub(r'[^a-zA-Z]', "", input2)
-                state = state.upper()
-                if(len(state) == 2 or len(state) == 0):
-                    is_state = True
-            
-            is_zip = False
-            while(not is_zip):
-                # User enters state name
-                input3 = input("Enter a (5) digit Zipcode [Letters will be ignored]: ")
-
-                # Ensures that the zip entered is 5 numbers
-                zipcode = re.sub(r'[^0-9]', "", input3)
-                if(len(zipcode) == 5 and zipcode.isnumeric() or len(zipcode) == 0):
-                    is_zip = True
-            
-            # Pass results to function to find the number of accidents
-            start_time = time.time()
-            search_location(city, state, zipcode)
+            search_location()
         
         
         elif user_input == "5" and read_data == True: 
-            input1 = int(input("Enter a year: "))
-            search_date(input1, 1, 1)
+            search_date()
 
             '''
             if(len(input1) == 4):
@@ -551,8 +565,6 @@ def main_menu():
             input3 = input("Enter a day: ")
             '''
 
-
-        
 
         # If user just presses enter w/o entering anything
         elif user_input == "7":
