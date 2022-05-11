@@ -435,9 +435,6 @@ def search_date():
         else:
             print("Invalid Input...\n")
 
-    print("[",time.time() - start_time,"] There are:", len(date),
-    "accidents recorded in" + str_date + "\n")
-
     while(not is_day):
         day = input("Enter a [Day] using digits: ")
         
@@ -481,15 +478,12 @@ def search_temp():
     global df
 
     temperature = df.copy()
-    str_temp = ""
 
     # filter inputs here (wip)
-    min_temp = int(input("Enter a Minimum Temperature (F):"))
-    max_temp = int(input("Enter a Maximum Temperature (F):"))
-    #min_vis = int(input("Enter a Minimum Visibility (mi):"))
-    min_vis = 0
-    #max_vis = int(input("Enter a Maximum Visibility (mi):"))
-    max_vis = 100
+    min_temp = int(input("Enter a Minimum Temperature (F): "))
+    max_temp = int(input("Enter a Maximum Temperature (F): "))
+    min_vis = int(input("Enter a Minimum Visibility (mi): "))
+    max_vis = int(input("Enter a Maximum Visibility (mi): "))
     #
 
     if(min_temp):
@@ -499,7 +493,6 @@ def search_temp():
             return
         else:
             temperature = temperature[min_temp_mask]
-            str_temp = "" + str(min_temp)
 
     if(max_temp):
         max_temp_mask = temperature["Temperature(F)"] <= max_temp
@@ -508,28 +501,25 @@ def search_temp():
             return
         else:
             temperature = temperature[max_temp_mask]
-            str_temp = "" + str(max_temp)
 
     if(min_vis):
         min_vis_mask = temperature["Temperature(F)"] >= min_vis
         if(sum(min_vis_mask) == 0):
-            print(min_vis, "is a temp out of bounds not listed in the file")
+            print(min_vis, "is a visibility out of bounds not listed in the file")
             return
         else:
             temperature = temperature[min_vis_mask]
-            str_temp = "" + str(min_vis)
 
     if(max_vis):
         max_vis_mask = temperature["Temperature(F)"] <= max_vis
         if(sum(max_vis_mask) == 0):
-            print(max_vis, "is a temp out of bounds not listed in the file")
+            print(max_vis, "is a visibility out of bounds not listed in the file")
             return
         else:
             temperature = temperature[max_vis_mask]
-            str_temp = "" + str(max_vis)
 
     print("[",time.time() - start_time,"] There are:", len(temperature),
-        "accidents recorded in" + str_temp + "\n")
+        "accidents recorded.\n")
         
 ##############################################################################
 
