@@ -425,7 +425,61 @@ def search_date(year, month, day):
 
     print("[",time.time() - start_time,"] There are:", len(date),
     "accidents recorded in" + str_date + "\n")
-        
+
+# search accidents by a range of temperature and by visibility
+def search_temp():
+    global df
+
+    temperature = df.copy()
+    str_temp = ""
+
+    # filter inputs here (wip)
+    min_temp = int(input("Enter a Minimum Temperature (F):"))
+    max_temp = input("Enter a Maximum Temperature (F):")
+    min_vis = input("Enter a Minimum Visibility (mi):")
+    max_vis = input("Enter a Maximum Visibility (mi):")
+    #
+
+    if(min_temp):
+        min_temp_mask = temperature["Temperature(F)"] >= min_temp
+        if(sum(min_temp_mask) == 0):
+            print(min_temp, "is a temp out of bounds not listed in the file")
+            return
+        else:
+            temperature = temperature[min_temp_mask]
+            str_temp = "" + str(min_temp)
+
+    if(max_temp):
+        max_temp_mask = temperature["Temperature(F)"] <= max_temp
+        if(sum(max_temp_mask) == 0):
+            print(max_temp, "is a temp out of bounds not listed in the file")
+            return
+        else:
+            temperature = temperature[max_temp_mask]
+            str_temp = "" + max_temp
+
+    if(min_vis):
+        min_vis_mask = temperature["Temperature(F)"] >= min_vis
+        if(sum(min_vis_mask) == 0):
+            print(min_vis, "is a temp out of bounds not listed in the file")
+            return
+        else:
+            temperature = temperature[min_vis_mask]
+            str_temp = "" + min_vis
+
+    if(max_vis):
+        max_vis_mask = temperature["Temperature(F)"] <= max_vis
+        if(sum(max_vis_mask) == 0):
+            print(max_vis, "is a temp out of bounds not listed in the file")
+            return
+        else:
+            temperature = temperature[max_vis_mask]
+            str_temp = "" + max_vis
+
+    print("[",time.time() - start_time,"] There are:", len(temperature),
+        "accidents recorded in" + str_temp + "\n")
+
+
 
 ##############################################################################
 
@@ -551,6 +605,8 @@ def main_menu():
             input3 = input("Enter a day: ")
             '''
 
+        elif user_input == "6" and read_data == True:
+            search_temp()
 
         
 
