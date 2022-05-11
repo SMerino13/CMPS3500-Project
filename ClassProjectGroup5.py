@@ -371,6 +371,59 @@ def search_location(city, state, zipcode):
     #     & (df["State"] == state)  
     #     & (df["Zipcode"] == zipcode))]
 
+def search_date(year, month, day):
+    global df
+
+    date = df.copy()
+    str_date = ""
+
+    # If a year was entered, make a boolean array where True values are rows that contain that year
+    if(year): 
+        #^[0-9]{4}
+        #print(pd.DatetimeIndex(date['Start_Time']).year == year)
+        date['Year'] = pd.DatetimeIndex(date['Start_Time']).year == year
+        print(date['Year'])
+        #year_mask = date['Start_Time'].dt.year == year
+        #print(date['Start_Time'].dt)
+        #print(date['Start_Time'].dt.year == year)
+
+        # IF there are no true values, that year does not exist in the Dataframe
+        #print(year_mask)
+        if(sum(year_mask) == 0):
+            print(year, "is not a year listed in the file")
+            return
+        else: 
+            date = date[year_mask]
+            str_date += " " + str(year)
+
+    
+    # If a month was entered, make a boolean array where True values are rows that contain that month
+    if(month):
+        #month_mask = pd.DatetimeIndex(date['Start_Time']).month == month
+        #month_mask = pd.DatetimeIndex(date['Start_Time']).month == month
+        # IF there are no true values, that month does not exist in the Dataframe
+        if(sum(month_mask) == 0):
+            print(month, "is not a month listed in the file")
+            return
+        else: 
+            date = date[month_mask]
+            str_date += " " + str(month)
+
+    # If a day was entered, make a boolean array where True values are rows that contain that day
+    if(day):
+        day_mask = pd.DatetimeIndex(date['Start_Time']).day == day
+        # IF there are no true values, that day does not exist in the Dataframe
+        if(sum(day_mask) == 0):
+            print(day, "is not a day listed in the file")
+            return
+        else: 
+            date = date[day_mask]
+            str_date += " " + str(day)
+
+    print("[",time.time() - start_time,"] There are:", len(date),
+    "accidents recorded in" + str_date + "\n")
+        
+
 ##############################################################################
 
 def main_menu():
@@ -480,6 +533,24 @@ def main_menu():
             start_time = time.time()
             search_location(city, state, zipcode)
         
+        
+        elif user_input == "5" and read_data == True: 
+            input1 = int(input("Enter a year: "))
+            search_date(input1, 1, 1)
+
+            '''
+            if(len(input1) == 4):
+                search_date(input1, input2, input3)
+            else:
+                print("ERROR")
+
+            input2 = input("Enter a month: ")
+            input3 = input("Enter a day: ")
+            '''
+
+
+        
+
         # If user just presses enter w/o entering anything
         elif user_input == "7":
             quit = True
