@@ -7,8 +7,8 @@
 # Student 4: Bryan Ayapantecatl
 
 import sys
+import datetime
 import time
-import threading
 import re
 
 # Check for and quit if environment is python2.
@@ -26,9 +26,15 @@ read_data = False
 # Function will load a CSV into a Dataframe using Panda's
 def load_data(filename = "US_Accidents_data.csv"):
     global df, read_data, start_time
+    
+    col_compare = ['Unnamed: 0','ID','Severity','Start_Time','End_Time','Distance(mi)',
+        'Description','Number','Street','Side','City','State','Zipcode','Country',
+        'Timezone','Weather_Timestamp','Temperature(F)','Humidity(%)',
+        'Pressure(in)','Visibility(mi)','Precipitation(in)','Weather_Condition']
 
-    print("Loading data set:")
+    print("Loading data set: ")
     print("************************************")
+    start_time = time.time()
     print("[",time.time() - start_time,"] Starting Script")
     print("[",time.time() - start_time,"] Loading",filename)
 
@@ -40,6 +46,24 @@ def load_data(filename = "US_Accidents_data.csv"):
         return False
     except:
         print("UNABLE TO LOAD FILE!:",filename)
+        return False
+
+    length = len(df.columns)
+    col_names = df.columns.values.tolist()
+
+    col_compare.sort()
+    col_names.sort()
+
+    if (length != 22):
+        print("The CSV does not have 22 columns.")
+        print("Script will not work with the data choosen")
+        print("Please read in a differnt file")
+        return False
+    
+    if (col_names != col_compare):
+        print("The file does not contain the appr col names.")
+        print("Script will not work with with the data choosen")
+        print("Please read in a differnt file")
         return False
 
     print("[",time.time() - start_time,"] Total Columns Read:",len(df.columns))
@@ -317,7 +341,7 @@ def longest_accident():
     # Condition to check if value is a real value, if not, no accident exist for year
     if (pd.isna(longest_acc) == True):
         print("[" + str(time.time() - start_time) + "] " 
-            + "There are no recorded accidents in the year 2022 and or the slected months\n")
+            + "There are no recorded accidents in the year 2022 and or the selected months\n")
     else:
         print("[" + str(time.time() - start_time) + "] " 
             + str(longest_acc) + " hours\n")
@@ -399,8 +423,11 @@ def search_location():
         else:
             local_frame = local_frame[zip_mask]
 
+    elasped_time = time.time() - start_time
     print("There were",len(local_frame),"accidents.")
-    print("Time to perform search is:[",time.time() - start_time,"]\n")
+    print("Time to perform search is:[",elasped_time,"]\n")
+
+    return elasped_time
 
 
 def search_date():
@@ -466,28 +493,75 @@ def search_date():
     # Print Results
     # ________________________________________________________________________ 
     
+    elasped_time = time.time() - start_time
     if(user_input):
-        print("[",time.time() - start_time,"] There are:",len(local_frame),
-            "accidents.\n")
+        print("There were",len(local_frame),"accidents.")
     else:
         print("No Year, Month, or Day was inputed. Total Accidents",
             len(local_frame))
+
+    print("Time to perform search is:[",elasped_time,"]\n")
+
+    return elasped_time
 
 # search accidents by a range of temperature and by visibility
 def search_temp():
     global df
 
+    is_min_temp = False
+    is_max_temp = False
+    is_min_vis = False
+    is_max_vis = False
     temperature = df.copy()
 
-    # filter inputs here (wip)
-    min_temp = int(input("Enter a Minimum Temperature (F): "))
-    max_temp = int(input("Enter a Maximum Temperature (F): "))
-    min_vis = int(input("Enter a Minimum Visibility (mi): "))
-    max_vis = int(input("Enter a Maximum Visibility (mi): "))
-    #
+    while(not is_min_temp):
+        # user will enter min temp
+        input1 = input("Enter a Minimum Temperature (F): ")
+        min_temp = re.sub(r'[^0-9]', "", input1)
+
+        # ensure value is either a num or empty
+        if(min_temp.isnumeric() or len(min_temp) == 0):
+            is_min_temp = True
+        else:
+            print("Please enter a valid number or leave this field empty")
+
+    while(not is_max_temp):
+        # user will enter max temp
+        input2 = input("Enter a Maximum Temperature (F): ")
+        max_temp = re.sub(r'[^0-9]', "", input2)
+
+        # ensure value is either a num or empty
+        if(max_temp.isnumeric() or len(max_temp) == 0):
+            is_max_temp = True
+        else:
+            print("Please enter a valid number or leave this field empty")
+
+    while(not is_min_vis):
+        # user will enter min vis
+        input3 = input("Enter a Minimum Visibility (mi): ")
+        min_vis = re.sub(r'[^0-9]', "", input3)
+
+        # ensure value is either a num or empty
+        if(min_vis.isnumeric() or len(min_vis) == 0):
+            is_min_vis = True
+        else:
+            print("Please enter a valid number or leave this field empty")
+            
+    while(not is_max_vis):
+        # user will enter max vis
+        input4 = input("Enter a Maximum Visibility (mi): ")
+        max_vis = re.sub(r'[^0-9]', "", input4)
+
+        # ensure value is either a num or empty
+        if(max_vis.isnumeric() or len(max_vis) == 0):
+            is_max_vis = True
+        else:
+            print("Please enter a valid number or leave this field empty")
+
+    start_time = time.time()
 
     if(min_temp):
-        min_temp_mask = temperature["Temperature(F)"] >= min_temp
+        min_temp_mask = temperature["Temperature(F)"] >= int(min_temp)
         if(sum(min_temp_mask) == 0):
             print(min_temp, "is a temp out of bounds not listed in the file")
             return
@@ -495,7 +569,7 @@ def search_temp():
             temperature = temperature[min_temp_mask]
 
     if(max_temp):
-        max_temp_mask = temperature["Temperature(F)"] <= max_temp
+        max_temp_mask = temperature["Temperature(F)"] <= int(max_temp)
         if(sum(max_temp_mask) == 0):
             print(max_temp, "is a temp out of bounds not listed in the file")
             return
@@ -503,7 +577,7 @@ def search_temp():
             temperature = temperature[max_temp_mask]
 
     if(min_vis):
-        min_vis_mask = temperature["Temperature(F)"] >= min_vis
+        min_vis_mask = temperature["Visibility(mi)"] >= int(min_vis)
         if(sum(min_vis_mask) == 0):
             print(min_vis, "is a visibility out of bounds not listed in the file")
             return
@@ -511,21 +585,24 @@ def search_temp():
             temperature = temperature[min_vis_mask]
 
     if(max_vis):
-        max_vis_mask = temperature["Temperature(F)"] <= max_vis
+        max_vis_mask = temperature["Visibility(mi)"] <= int(max_vis)
         if(sum(max_vis_mask) == 0):
             print(max_vis, "is a visibility out of bounds not listed in the file")
             return
         else:
             temperature = temperature[max_vis_mask]
 
-    print("[",time.time() - start_time,"] There are:", len(temperature),
-        "accidents recorded.\n")
+    elasped_time = time.time() - start_time
+    print("There are:", len(temperature),"accidents recorded.\n")
+    print("Time to perform search is:[",elasped_time,"]\n")
+
+    return elasped_time
         
 ##############################################################################
 
 def main_menu():
     global start_time, read_data
-
+    total_runtime = 0;
     quit = False
 
     while(not quit):
@@ -551,15 +628,15 @@ def main_menu():
 
             if(filename):
                 filename = filename + ".csv"
-                start_time = time.time()
                 read_data = load_data(filename)
                 load_time = time.time() - start_time
                 print("Time to load is: [",load_time,"]\n")
             else:
-                start_time = time.time()
                 read_data = load_data()
                 load_time = time.time() - start_time
                 print("Time to load is: [",load_time,"]\n")
+            
+            total_runtime += load_time
             
         # ONLY CLEAN DATA WHEN DATA HAS BEEN READ
         elif user_input == "2" and read_data == True:
@@ -568,6 +645,7 @@ def main_menu():
             process_time = time.time() - start_time
             print("Time to process is:",process_time,)
             print("Total Runtime:[",load_time + process_time,"]\n")
+            total_runtime += process_time
         
         # ANSWER ALL 10 QUESTIONS
         elif user_input == "3" and read_data == True:
@@ -595,29 +673,23 @@ def main_menu():
 
             print("Time to answer [",question_time,"]")
             print("Total runtime: [",load_time + process_time + question_time,"]\n")
+            total_runtime += question_time
 
         elif user_input == "4" and read_data == True:
-            search_location()
-        
+            total_runtime += search_location()
+            
         
         elif user_input == "5" and read_data == True: 
-            search_date()
-
-            '''
-            if(len(input1) == 4):
-                search_date(input1, input2, input3)
-            else:
-                print("ERROR")
-
-            input2 = input("Enter a month: ")
-            input3 = input("Enter a day: ")
-            '''
+            total_runtime += search_date()
 
         elif user_input == "6" and read_data == True:
-            search_temp()
+            total_runtime += search_temp()
 
         # If user just presses enter w/o entering anything
         elif user_input == "7":
+            total_minutes = datetime.timedelta(seconds = total_runtime)
+            datetime.timedelta(0, total_runtime)
+            print("Total Running Time (In Minutes):",total_minutes)
             quit = True
 
         else:
